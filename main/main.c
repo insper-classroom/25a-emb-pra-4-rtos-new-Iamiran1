@@ -148,10 +148,9 @@ void oled_task(void *p)
                 printf("Dist: %.2f cm \n", distance);
                 gfx_clear_buffer(&disp);
                 char buffer[12];
-                sprintf(buffer, "Dist: %.2f", distance);
+                sprintf(buffer, "Dist: %.2f cm", distance);
                 gfx_draw_string(&disp, 0, 0, 1, buffer);
                 gfx_show(&disp);
-                vTaskDelay(pdMS_TO_TICKS(150));
 
             }
         }
