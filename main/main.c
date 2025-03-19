@@ -23,8 +23,7 @@ const uint LED_3_OLED = 22;
 const int ECHO_PIN = 6;
 const int TRIG_PIN = 7;
 
-volatile uint32_t start_us;
-volatile uint32_t end_us;
+
 QueueHandle_t xQueueTimeEchoStart, xQueueTimeEchoEnd, xQueueDistance;
 SemaphoreHandle_t xSemaphoreTrigger;
 
@@ -33,12 +32,12 @@ void pin_callback(uint gpio, uint32_t events)
 { // pin_callback: Função callback do pino do echo.
     if (gpio_get(ECHO_PIN) == 1)
     {
-        start_us = get_absolute_time();
+        uint32_t start_us = get_absolute_time();
         xQueueSend(xQueueTimeEchoStart, &start_us, 0);
     }
     else if (gpio_get(ECHO_PIN) == 0)
     {
-        end_us = get_absolute_time();
+        uint32_t end_us = get_absolute_time();
         xQueueSend(xQueueTimeEchoEnd, &end_us, 0);
         xSemaphoreGiveFromISR(xSemaphoreTrigger, 0);
     }
