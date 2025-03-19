@@ -20,23 +20,14 @@ const uint LED_1_OLED = 20;
 const uint LED_2_OLED = 21;
 const uint LED_3_OLED = 22;
 
-static volatile bool fired = false;
 const int ECHO_PIN = 6;
 const int TRIG_PIN = 7;
 
-volatile bool echo_got = false;
 volatile uint32_t start_us;
 volatile uint32_t end_us;
 QueueHandle_t xQueueTimeEchoStart, xQueueTimeEchoEnd, xQueueDistance;
 SemaphoreHandle_t xSemaphoreTrigger;
-alarm_id_t alarm;
 
-int64_t alarm_callback(alarm_id_t id, void *user_data)
-{
-    fired = true;
-    // Can return a value here in us to fire in the future
-    return 0;
-}
 
 void pin_callback(uint gpio, uint32_t events)
 { // pin_callback: Função callback do pino do echo.
@@ -68,11 +59,11 @@ void echo_task(void *p)
         float end = 0.0;
         if (xQueueReceive(xQueueTimeEchoStart, &start, 0))
         {
-            printf(":)");
+            printf(":( \n");
         }
         if (xQueueReceive(xQueueTimeEchoEnd, &end, 0))
         {
-            cancel_alarm(alarm);
+            printf(":) \n");
          }
         if (end > 0)
         {
@@ -189,7 +180,6 @@ int main()
         if (getchar_timeout_us(100) == 'A'){
             while (1){
                 xTaskCreate(trigger_task, "Trigger Task", 256, NULL, 1, NULL);
-                alarm = add_alarm_in_ms(5000, alarm_callback, NULL, false);
                 xTaskCreate(echo_task, "Echo Task", 256, NULL, 1, NULL);
                 xTaskCreate(oled_task, "Oled", 4095, NULL, 1, NULL);
                 vTaskStartScheduler();
