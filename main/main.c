@@ -148,7 +148,7 @@ void oled_task(void *p)
                 cnt = 15;
             gfx_show(&disp);
             fired = false;
-            xQueueSendFromISR(xQueueAlarm, &fired, 0);
+            xQueueSend(xQueueAlarm, &fired, 0);
         }
         if (xSemaphoreTake(xSemaphoreTrigger, pdMS_TO_TICKS(500)) == pdTRUE)
         {
