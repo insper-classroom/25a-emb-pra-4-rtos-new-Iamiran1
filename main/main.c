@@ -148,11 +148,13 @@ void oled_task(void *p)
                 char buffer[12];
                 sprintf(buffer, "Dist: %.2f cm", distance);
                 gfx_draw_string(&disp, 0, 0, 1, buffer);
-                gfx_draw_line(&disp, 15, 27, cnt,
-                    27);
+                int size_bar = (int) (128 * distance)/ 300;
+                if(size_bar > 300){
+                    size_bar = 128;
+                }
+
+                gfx_draw_line(&disp, 15, 27, size_bar,27);
                 vTaskDelay(pdMS_TO_TICKS(50));
-                if (++cnt == 112)
-                    cnt = 15;
                 gfx_show(&disp);
 
 
