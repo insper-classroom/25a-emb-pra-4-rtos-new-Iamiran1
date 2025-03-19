@@ -90,7 +90,7 @@ void trigger_task(void *p)
 { // trigger_task: Task responsável por gerar o trigger.
     gpio_init(TRIG_PIN);
     gpio_set_dir(TRIG_PIN, GPIO_OUT);
-    int delay = 5;
+    int delay = 50;
     while (true)
     {
         if (delay > 0)
