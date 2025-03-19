@@ -145,7 +145,6 @@ void oled_task(void *p)
             float distance = 0.0;
             if (xQueueReceive(xQueueDistance, &distance, 0))
             {
-                printf("Dist: %.2f cm \n", distance);
                 gfx_clear_buffer(&disp);
                 char buffer[12];
                 sprintf(buffer, "Dist: %.2f cm", distance);
@@ -155,14 +154,22 @@ void oled_task(void *p)
                 vTaskDelay(pdMS_TO_TICKS(50));
                 if (++cnt == 112)
                     cnt = 15;
-
                 gfx_show(&disp);
 
 
 
             }
         }
-       
+       else{
+            gfx_clear_buffer(&disp);
+            gfx_draw_string(&disp, 0, 0, 1, "Falhou");
+            gfx_draw_line(&disp, 15, 27, cnt,
+                27);
+            vTaskDelay(pdMS_TO_TICKS(50));
+            if (++cnt == 112)
+                cnt = 15;
+            gfx_show(&disp);
+       }
 }
 }
 
