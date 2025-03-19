@@ -54,8 +54,8 @@ void echo_task(void *p)
 
     while (true)
     {
-        float start = 0.0;
-        float end = 0.0;
+        uint32_t start;
+        uint32_t end;
         if (xQueueReceive(xQueueTimeEchoStart, &start, 0))
         {
             printf(":( \n");
@@ -67,7 +67,7 @@ void echo_task(void *p)
         if (end > 0)
         {
             
-            uint32_t delta_t = end_us - start_us;
+            uint32_t delta_t = end - start;
             float distancia = (float)delta_t * 0.017015;
             printf("%f \n",distancia);
             xQueueSend(xQueueDistance, &distancia, 0);
