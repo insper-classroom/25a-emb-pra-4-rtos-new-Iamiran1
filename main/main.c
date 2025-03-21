@@ -22,19 +22,12 @@ const uint LED_3_OLED = 22;
 
 const int ECHO_PIN = 6;
 const int TRIG_PIN = 7;
-alarm_id_t alarm;
 
 
-QueueHandle_t xQueueTimeEchoStart, xQueueTimeEchoEnd, xQueueDistance,xQueueAlarm;
+QueueHandle_t xQueueTimeEchoStart, xQueueTimeEchoEnd, xQueueDistance;
 SemaphoreHandle_t xSemaphoreTrigger;
 
-int64_t alarm_callback(alarm_id_t id, void *user_data)
-{
-    bool fired = true;
-    xQueueSendFromISR(xQueueAlarm, &fired, 0);
-    // Can return a value here in us to fire in the future
-    return 0;
-}
+
 
 void pin_callback(uint gpio, uint32_t events)
 { // pin_callback: Função callback do pino do echo.
@@ -42,12 +35,13 @@ void pin_callback(uint gpio, uint32_t events)
     {
         uint32_t start_us = get_absolute_time();
         xQueueSendFromISR(xQueueTimeEchoStart, &start_us, 0);
+        xSemaphoreGiveFromISR(xSemaphoreTrigger, 0);
+
     }
     else if (gpio_get(ECHO_PIN) == 0)
     {
         uint32_t end_us = get_absolute_time();
         xQueueSendFromISR(xQueueTimeEchoEnd, &end_us, 0);
-        xSemaphoreGiveFromISR(xSemaphoreTrigger, 0);
     }
 }
 void echo_task(void *p)
@@ -135,24 +129,9 @@ void oled_task(void *p)
     char cnt = 15;
 
     while (1){    
-        bool fired;
-        xQueueReceive(xQueueAlarm, &fired, 0);
 
-        if(fired == true){
-            gfx_clear_buffer(&disp);
-            gfx_draw_string(&disp, 0, 0, 1, "Falhou");
-            gfx_draw_line(&disp, 15, 27, cnt,
-                27);
-            vTaskDelay(pdMS_TO_TICKS(50));
-            if (++cnt == 112)
-                cnt = 15;
-            gfx_show(&disp);
-            fired = false;
-            xQueueSend(xQueueAlarm, &fired, 0);
-        }
         if (xSemaphoreTake(xSemaphoreTrigger, pdMS_TO_TICKS(500)) == pdTRUE)
         {
-            cancel_alarm(alarm);
             float distance = 0.0;
             if (xQueueReceive(xQueueDistance, &distance, 0))
             {
@@ -168,10 +147,17 @@ void oled_task(void *p)
                 gfx_draw_line(&disp, 15, 27, size_bar,27);
                 vTaskDelay(pdMS_TO_TICKS(50));
                 gfx_show(&disp);
-
-
-
             }
+        }
+        else { 
+            gfx_clear_buffer(&disp);
+            gfx_draw_string(&disp, 0, 0, 1, "Falhou");
+            gfx_draw_line(&disp, 15, 27, cnt,
+                27);
+            vTaskDelay(pdMS_TO_TICKS(50));
+            if (++cnt == 112)
+                cnt = 15;
+            gfx_show(&disp);
         }
 
 }
@@ -185,7 +171,6 @@ int main()
 
     xQueueTimeEchoStart = xQueueCreate(32, sizeof(float));
     xQueueTimeEchoEnd = xQueueCreate(32, sizeof(float));
-    xQueueAlarm = xQueueCreate(32, sizeof(float));
 
     xQueueDistance = xQueueCreate(32, sizeof(float));
     xSemaphoreTrigger = xSemaphoreCreateBinary();
@@ -196,7 +181,6 @@ int main()
         if (getchar_timeout_us(100) == 'A'){
             while (1){
                 xTaskCreate(trigger_task, "Trigger Task", 256, NULL, 1, NULL);
-                alarm = add_alarm_in_ms(5000, alarm_callback, NULL, false);
                 xTaskCreate(echo_task, "Echo Task", 256, NULL, 1, NULL);
                 xTaskCreate(oled_task, "Oled", 4095, NULL, 1, NULL);
                 vTaskStartScheduler();
