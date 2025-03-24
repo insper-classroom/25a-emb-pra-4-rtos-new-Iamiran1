@@ -133,10 +133,18 @@ void oled_task(void *p)
             float distance = 0.0;
             if (xQueueReceive(xQueueDistance, &distance, 0))
             {
+                if(distance < 300){
                 gfx_clear_buffer(&disp);
                 char buffer[12];
                 sprintf(buffer, "Dist: %.2f cm", distance);
                 gfx_draw_string(&disp, 0, 0, 1, buffer);
+                }
+                else{
+                    gfx_clear_buffer(&disp);
+                    char buffer[12];
+                    sprintf(buffer, "Falha");
+                    gfx_draw_string(&disp, 0, 0, 1, buffer);
+                }
                 int size_bar = (int) (128 * distance)/ 300;
                 if(size_bar > 300){
                     size_bar = 128;
